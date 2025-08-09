@@ -37,7 +37,7 @@ bool DeleteDirectory(CString DirName)
 			}
 			else
 			{
-				SetFileAttributes(strDirName, FILE_ATTRIBUTE_NORMAL); //È¥µôÎÄ¼şµÄÏµÍ³ºÍÒş²ØÊôĞÔ
+				SetFileAttributes(strDirName, FILE_ATTRIBUTE_NORMAL); //å»æ‰æ–‡ä»¶çš„ç³»ç»Ÿå’Œéšè—å±æ€§
 				DeleteFile(strDirName);
 			}
 		}
@@ -49,6 +49,14 @@ bool DeleteDirectory(CString DirName)
 	}
 	return true;
 
+}
+
+int fileCopy(char *in, char *out, int isdelete)
+{
+	if (!CopyFile(in, out, isdelete))
+		return 0;
+	SetFileAttributes(out, FILE_ATTRIBUTE_NORMAL); //å»æ‰æ–‡ä»¶å±æ€§
+	return 1;
 }
 
 void printPrct(int log, int prct)
@@ -150,7 +158,7 @@ int main(int argc,char **argv)
 			"      when <destination> specifies a file.\n"
 			"========================================================================================\n"
 		);
-		puts("Version:100B102        With CE-Collections:202B104");
+		puts("Version:100B103");
 		puts("Copyright 351Workshop 2025");
 		return 1;
 	}
@@ -208,7 +216,7 @@ int main(int argc,char **argv)
 	printf("batBuffer:............%s\n", batBuffer);
 
 
-	if (!CopyFile(imgPath, outPath, FALSE))
+	if (!fileCopy(imgPath, outPath, FALSE))
 	{
 		puts("Error - Can't copy %%OUT.img%%");
 		return 1;
@@ -216,26 +224,26 @@ int main(int argc,char **argv)
 
 
 	HANDLE hFileNk = CreateFile(
-		nkPath, // ÎÄ¼şÂ·¾¶
-		GENERIC_READ, // ¶ÁÈ¡È¨ÏŞ
-		0, // ²»¹²Ïí
-		NULL, // Ä¬ÈÏ°²È«ÊôĞÔ
-		OPEN_EXISTING, // ´ò¿ªÒÑ´æÔÚµÄÎÄ¼ş
-		FILE_ATTRIBUTE_NORMAL, // ÆÕÍ¨ÎÄ¼şÊôĞÔ
-		NULL // ÎŞÄ£°åÎÄ¼ş
+		nkPath, // æ–‡ä»¶è·¯å¾„
+		GENERIC_READ, // è¯»å–æƒé™
+		0, // ä¸å…±äº«
+		NULL, // é»˜è®¤å®‰å…¨å±æ€§
+		OPEN_EXISTING, // æ‰“å¼€å·²å­˜åœ¨çš„æ–‡ä»¶
+		FILE_ATTRIBUTE_NORMAL, // æ™®é€šæ–‡ä»¶å±æ€§
+		NULL // æ— æ¨¡æ¿æ–‡ä»¶
 	);
 	if (hFileNk == INVALID_HANDLE_VALUE) {
 		puts("Error - Can't open NK.bin");
 		return 1;
 	}
 	HANDLE hFileImg = CreateFile(
-		outPath, // ÎÄ¼şÂ·¾¶
-		GENERIC_WRITE, // ¶ÁÈ¡È¨ÏŞ
-		0, // ²»¹²Ïí
-		NULL, // Ä¬ÈÏ°²È«ÊôĞÔ
-		OPEN_EXISTING, // ´ò¿ªÒÑ´æÔÚµÄÎÄ¼ş
-		FILE_ATTRIBUTE_NORMAL, // ÆÕÍ¨ÎÄ¼şÊôĞÔ
-		NULL // ÎŞÄ£°åÎÄ¼ş
+		outPath, // æ–‡ä»¶è·¯å¾„
+		GENERIC_WRITE, // è¯»å–æƒé™
+		0, // ä¸å…±äº«
+		NULL, // é»˜è®¤å®‰å…¨å±æ€§
+		OPEN_EXISTING, // æ‰“å¼€å·²å­˜åœ¨çš„æ–‡ä»¶
+		FILE_ATTRIBUTE_NORMAL, // æ™®é€šæ–‡ä»¶å±æ€§
+		NULL // æ— æ¨¡æ¿æ–‡ä»¶
 	);
 	if (hFileImg == INVALID_HANDLE_VALUE) {
 		puts("Error - Can't open OUT.img");
@@ -246,24 +254,24 @@ int main(int argc,char **argv)
 	printf("********************");
 	long long int iFileNkSize = GetFileSize(hFileNk, NULL);
 	OVERLAPPED overlappedNk = { 0 };
-	overlappedNk.Offset = 0; // ´ÓÆ«ÒÆÎ»ÖÃ 0 ¿ªÊ¼¶ÁÈ¡
+	overlappedNk.Offset = 0; // ä»åç§»ä½ç½® 0 å¼€å§‹è¯»å–
 	overlappedNk.OffsetHigh = 0;
 	long long int iFileImgSize = GetFileSize(hFileImg, NULL);
 	OVERLAPPED overlappedImg = { 0 };
-	overlappedImg.Offset = nkAddrOffset; // ´ÓÆ«ÒÆÎ»ÖÃ 0x81000 ¿ªÊ¼Ğ´Èë
+	overlappedImg.Offset = nkAddrOffset; // ä»åç§»ä½ç½® 0x81000 å¼€å§‹å†™å…¥
 	overlappedImg.OffsetHigh = 0;
- 	char buffer[255] = { 0 }; // »º³åÇø
+ 	char buffer[255] = { 0 }; // ç¼“å†²åŒº
 	DWORD bytesRead = 0;
 	DWORD bytesWritten = 0;
 	for (int i = 0; i < (iFileNkSize / 128)+1; i++)
 	{
 		strcpy_s(buffer, "");
 		if (!ReadFile(
-			hFileNk, // ÎÄ¼ş¾ä±ú
-			buffer, // »º³åÇø
-			128, // Òª¶ÁÈ¡µÄ×Ö½ÚÊı
-			&bytesRead, // Êµ¼Ê¶ÁÈ¡µÄ×Ö½ÚÊı
-			&overlappedNk // OVERLAPPED ½á¹¹
+			hFileNk, // æ–‡ä»¶å¥æŸ„
+			buffer, // ç¼“å†²åŒº
+			128, // è¦è¯»å–çš„å­—èŠ‚æ•°
+			&bytesRead, // å®é™…è¯»å–çš„å­—èŠ‚æ•°
+			&overlappedNk // OVERLAPPED ç»“æ„
 		))
 		{
 			printf("Error - Can't read NK.bin at %#x\n", i * 128);
@@ -368,11 +376,11 @@ int main(int argc,char **argv)
 	printf("nvrOutPath............%s\n", nvrOutPath);
 	printf("nvrOutDir.............%s\n", nvrOutDir);
 
-	if (!CopyFile(profilePath, proOutPath, FALSE))
+	if (!fileCopy(profilePath, proOutPath, FALSE))
 		puts("Warning - Can't copy %%PROOUT.cfg%%");
 	if (!CreateDirectory(nvrOutDir, NULL))
 		puts("Warning - Can't create %%NVRDIR%%");
-	if (!CopyFile(nvrPath, nvrOutPath, FALSE))
+	if (!fileCopy(nvrPath, nvrOutPath, FALSE))
 		puts("Warning - Can't copy %%MCH.nvr%%");
 	WritePrivateProfileString("Hard disks", "hdd_01_fn", outPath, proOutPath);
 
