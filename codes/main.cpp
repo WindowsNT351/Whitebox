@@ -14,6 +14,14 @@ void astrcpy(char* out, char* in, int addr)
 	}
 }
 
+DWORD WINAPI dispWind(LPVOID lpParam)
+{
+	while (1)
+	{
+		MessageBox(NULL, "Please wait while Whitebox preparing emulation.", "Whitebox Emulator", MB_OK);
+	}
+}
+
 bool DeleteDirectory(CString DirName)
 {
 	CString PUBPATH;
@@ -82,7 +90,7 @@ int main(int argc,char **argv)
 	if (argc <= 2)
 	{
 		puts("WHITEBOX.exe - Launcher for Windows CE x86 Image Emulator based on 86Box");
-		puts("Usage: WHITEBOX [LOADCEPC.exe configuration(s)...] [Whitebox configuration(s)...]<Path to NK.bin>");
+		puts("Usage: WHITEBOX [LOADCEPC.exe configuration(s)...] [Whitebox configuration(s)...] <Path to NK.bin>");
 		puts("Whitebox configuration:");
 		puts("	/M:<Path to config.cfg for 86Box>");
 		puts("	We provide some sample profiles: PRO2.cfg for CE2.0 emulation, PRO1.cfg for other emulation.");
@@ -158,10 +166,21 @@ int main(int argc,char **argv)
 			"      when <destination> specifies a file.\n"
 			"========================================================================================\n"
 		);
-		puts("Version:100B103");
+		puts("Version:100B104");
 		puts("Copyright 351Workshop 2025");
 		return 1;
 	}
+
+
+	HANDLE hDispWind = CreateThread(
+		NULL, // 默认安全属性
+		0, // 默认堆栈大小
+		dispWind, // 线程函数
+		NULL, // 无参数传递
+		0, // 立即执行线程
+		NULL // 不接收线程ID
+	);
+
 
 
 	char batBuffer[120] = { 0 };
@@ -364,6 +383,10 @@ int main(int argc,char **argv)
 	{
 		sprintf_s(nvrPath, ".\\nvr\\%s.nvr", emulMch);
 	}
+
+
+	TerminateThread(hDispWind,0);
+
 
 	printf("====================Starting 86Box=====================\n");
 	printf("outPath:..............%s\n", outPath);
