@@ -166,7 +166,7 @@ int main(int argc,char **argv)
 			"      when <destination> specifies a file.\n"
 			"========================================================================================\n"
 		);
-		puts("Version:100B104");
+		puts("Version:100R001");
 		puts("Copyright 351Workshop 2025");
 		return 1;
 	}
